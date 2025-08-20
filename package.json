@@ -7,19 +7,20 @@
     "build": "webpack",
     "dev": "wrangler dev",
     "preview": "wrangler preview",
-    "deploy": "wrangler publish -e production"
+    "deploy": "wrangler publish -e production",
+    "test:page": "node test-page-api.js"
   },
   "dependencies": {
     "tiny-request-router": "^1.2.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^2.0.0",
-    "@cloudflare/wrangler": "^1.10.3",
-    "@types/node": "^14.0.24",
-    "prettier": "^2.0.5",
-    "ts-loader": "^8.0.1",
-    "typescript": "^3.9.7",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.12"
+    "@cloudflare/workers-types": "^4.0.0",
+    "wrangler": "^3.0.0",
+    "@types/node": "^20.0.0",
+    "prettier": "^3.0.0",
+    "ts-loader": "^9.0.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^5.0.0"
   }
 }

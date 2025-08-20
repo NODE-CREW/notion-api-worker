@@ -5,6 +5,8 @@ import {
   CollectionData,
   NotionSearchParamsType,
   NotionSearchResultsType,
+  BlockType,
+  RecordMapType,
 } from "./types";
 
 const NOTION_API = "https://www.notion.so/api/v3";
@@ -36,7 +38,25 @@ const fetchNotionData = async <T extends any>({
     body: JSON.stringify(body),
   });
 
-  return res.json();
+  console.log(`🔍 API 응답 상태: ${res.status} ${res.statusText}`);
+  
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error(resource, JSON.stringify(body))
+    console.error(`❌ API 에러 응답:`, errorText);
+    throw new Error(`API 요청 실패: ${res.status} ${res.statusText} - ${errorText}`);
+  }
+
+  const responseText = await res.text();
+  console.log(`🔍 API 응답 길이: ${responseText.length} 문자`);
+  
+  try {
+    return JSON.parse(responseText);
+  } catch (parseError: any) {
+    console.error(`❌ JSON 파싱 에러:`, parseError);
+    console.error(`❌ 응답 내용 (처음 500자):`, responseText.substring(0, 500));
+    throw new Error(`JSON 파싱 실패: ${parseError.message}`);
+  }
 };
 
 export const fetchPageById = async (pageId: string, notionToken?: string) => {
@@ -126,8 +146,8 @@ export const fetchBlocks = async (
   blockList: string[],
   notionToken?: string
 ) => {
-  return await fetchNotionData<LoadPageChunkData>({
-    resource: "syncRecordValues",
+  const response = await fetchNotionData<{ results: BlockType[] }>({
+    resource: "getRecordValues",
     body: {
       requests: blockList.map((id) => ({
         id,
@@ -137,6 +157,28 @@ export const fetchBlocks = async (
     },
     notionToken,
   });
+
+  // LoadPageChunkData 형태로 변환
+  const recordMap: RecordMapType = {
+    block: {},
+    notion_user: {},
+    collection: {},
+    collection_view: {},
+  };
+
+  // results를 recordMap.block으로 변환
+  if (response.results) {
+    response.results.forEach((block) => {
+      recordMap.block[block.value.id] = block;
+    });
+  }
+
+  return {
+    recordMap,
+    cursor: {
+      stack: [],
+    },
+  } as LoadPageChunkData;
 };
 
 export const fetchNotionSearch = async (
